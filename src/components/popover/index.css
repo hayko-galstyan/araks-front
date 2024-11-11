@@ -22,10 +22,10 @@
 }
 
 .project-popover-action .ant-popover-inner .ant-popover-title {
-  background-color: transparent;
   margin-bottom: 0;
   padding: 12px 9px 12px 4px;
   background: linear-gradient(92.68deg, rgba(220, 223, 244, 0.7) 0%, rgba(220, 220, 244, 0.2) 98.48%);
+  background-color: transparent;
   box-shadow: 0px 4px 4px rgba(157, 162, 198, 0.2);
   backdrop-filter: blur(5px);
 }

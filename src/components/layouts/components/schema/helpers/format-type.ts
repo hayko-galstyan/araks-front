@@ -63,7 +63,7 @@ export const formattedTypes = (
   graph: Graph,
   nodesList: IProjectType[],
   edges: ProjectEdgeResponse[],
-  projectInfo: ContextTypeProject | null
+  projectInfo: ContextTypeProject | null,
 ) => {
   if (graph?.getNodes && graph.getNodes()) {
     const cells: Cell[] = [];
@@ -102,7 +102,7 @@ export const formattedTypes = (
       const { properties } = node;
 
       for (const property of properties) {
-        if (property.name === "default_image" ) continue;
+        if (property.name === 'default_image') continue;
         const props = {
           allow: isPerspective() || isTemplate(),
           color: node.color,
@@ -116,13 +116,13 @@ export const formattedTypes = (
         if (inverse || source_id === node.id) {
           formattedProperties.push(
             insertProperty({
-              id: id || '',
+              id: id ?? '',
               name,
               allow: false,
               color: node.color,
               ref_property_type_id: 'connection',
               multiple_type: multiple,
-            })
+            }),
           );
         }
       }
@@ -144,7 +144,7 @@ export const formattedTypes = (
             cursor: 'pointer',
             allow: isPerspective() || isTemplate(),
           },
-          parentId: node.parent_id || '',
+          parentId: node.parent_id ?? '',
           [PORT_EYE_PATH]:
             isPerspective() || isTemplate()
               ? { d: EyeD, refX: 130, refY: 17, fill: colorPropertyType, cursor: 'pointer' }
