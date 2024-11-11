@@ -12,11 +12,12 @@ import { MentionRowsValue } from 'api/user/types';
 import { useGetUserSearch } from 'api/user/use-get-user-search';
 import { useMemo, useRef, useState } from 'react';
 import ReactQuill from 'react-quill';
-
 import 'react-quill/dist/quill.snow.css';
 import 'quill-mention';
 import { useManageNodeComment } from 'api/comments/use-manage-node-comment';
 import { useUpdateProjectComment } from 'api/projects/use-ubdate-project-comment';
+
+// #sonarube
 
 const formats = ['bold', 'italic', 'underline', 'mention'];
 
@@ -83,15 +84,15 @@ export const Comments = ({ nodeId }: Props) => {
         },
         source: async function (searchTerm: string, renderList: SourceRenderList) {
           const { data } = await mutateAsync({ search: searchTerm });
-          const renderData = await data.rows.map((item) => ({
+          const renderData = data.rows.map((item) => ({
             id: item.id,
             value: `${item.first_name} ${item.last_name}`,
           }));
-          await renderList(renderData);
+          renderList(renderData);
         },
       },
     }),
-    [mutateAsync]
+    [mutateAsync],
   );
 
   const onFinish = (values: ProjectCommentManage) => {
@@ -135,11 +136,11 @@ export const Comments = ({ nodeId }: Props) => {
 
   return (
     <Form
-      name="comment-form"
+      name='comment-form'
       form={form}
       onFinish={onFinish}
-      autoComplete="off"
-      layout="vertical"
+      autoComplete='off'
+      layout='vertical'
       style={{ height: '100%' }}
       initialValues={{ parent_id: null }}
     >
@@ -148,7 +149,7 @@ export const Comments = ({ nodeId }: Props) => {
         <div>
           <ReplayText nodeId={nodeId} />
           <FormItem
-            name="comments"
+            name='comments'
             rules={[
               {
                 required: true,
@@ -162,7 +163,7 @@ export const Comments = ({ nodeId }: Props) => {
           >
             <ReactQuill modules={modules} formats={formats} ref={(ref: ReactQuill) => (quillRef.current = ref)} />
           </FormItem>
-          <Button block type="primary" htmlType="submit">
+          <Button block type='primary' htmlType='submit'>
             Submit
           </Button>
         </div>

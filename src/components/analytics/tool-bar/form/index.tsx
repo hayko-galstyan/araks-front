@@ -26,6 +26,8 @@ import { transformDataToTreeSelect } from './utils';
 import { CARD_OPERATOR, CHART_OPERATOR, OPERATOR_SELECT_OPTIONS } from './operators';
 import { LoadingOutlined } from '@ant-design/icons';
 
+// #sonarube
+
 const { INPUT, COLOR, TREESELECT, SELECT, TEXT_EDITOR } = AnalyticToolForm;
 const { UPDATE } = AnalyticActionTypes;
 const { CHART, TABLE, TEXT, CARD } = AnalyticTools;
@@ -58,13 +60,13 @@ export const ToolParams: React.FC = () => {
       // change operator with type
       if (nodeType) {
         const filterOperators = [...OPERATOR_SELECT_OPTIONS, ...operators].filter((item) =>
-          item.type.includes(nodeType as AnalyticPropertyType)
+          item.type.includes(nodeType as AnalyticPropertyType),
         );
         setIsOptions(filterOperators);
         form.setFieldsValue({ operator: operator || filterOperators?.at(0)?.value });
       }
     },
-    [form, operators]
+    [form, operators],
   );
 
   const handleSelect = (value: string, node: TTreeSelectType, name: string) => {
@@ -102,70 +104,104 @@ export const ToolParams: React.FC = () => {
     }
   };
 
+  const setChartFormValues = (form: any, formData: any, isSimilarNodeTypeId: boolean) => {
+    switch (formData?.name) {
+      case CHART:
+        form.setFieldsValue({
+          title: formData.title,
+          yAxis: isSimilarNodeTypeId ? formData?.params[1]?.property_type_id : null,
+          xAxis: isSimilarNodeTypeId ? formData?.params[0]?.property_type_id : null,
+          legend: formData.legend,
+          operator: formData.operator,
+          color: formData.color,
+        });
+        break;
+      case TABLE:
+        form.setFieldsValue({
+          title: formData.title,
+          columns: isSimilarNodeTypeId ? formData.params.map((item: AnyObject) => item.property_type_id) : null,
+        });
+        break;
+      case TEXT:
+        form.setFieldsValue({
+          title: formData.title,
+          editor: formData.params[0].additional,
+        });
+        break;
+      case CARD:
+        form.setFieldsValue({
+          title: formData.title,
+          yAxis: isSimilarNodeTypeId ? formData?.params[0]?.property_type_id : null,
+          operator: formData.operator,
+          color: formData.color,
+        });
+        break;
+    }
+  };
+
+  const setChartParamsAndOperator = (formData: any, setChartParams: Function, changeOperatorWidthType: Function) => {
+    if (formData && formData?.params) {
+      setChartParams(() =>
+        formData?.params.map((item: AnyObject) => ({
+          id: item.property_type_id,
+          name: item.project_type_name,
+          type: item.property_type,
+          project_type_id: item.project_type_id,
+          project_type_name: item.project_type_name,
+          target_edge_type_id: item.target_edge_type_id,
+        })),
+      );
+
+      const index = formData?.params.length % 2 === 0 ? 1 : 0;
+      changeOperatorWidthType(formData.params[index].property_type, formData.operator);
+    }
+  };
+
+  const resetFormFields = (form: any) => {
+    form.resetFields();
+  };
+
+  const updateFormData = (
+    form: any,
+    formData: any,
+    nodeTypeId: string,
+    setChartParams: Function,
+    changeOperatorWidthType: Function,
+  ) => {
+    const isSimilarNodeTypeId = formData?.source_type_id === nodeTypeId;
+    setChartFormValues(form, formData, isSimilarNodeTypeId);
+
+    if (isSimilarNodeTypeId) {
+      setChartParamsAndOperator(formData, setChartParams, changeOperatorWidthType);
+    }
+  };
+
+  const handleUpdate = (
+    selectedTool: any,
+    tools: any,
+    activeBoard: string,
+    form: any,
+    nodeTypeId: string,
+    setChartParams: Function,
+    changeOperatorWidthType: Function,
+  ) => {
+    if (tools[activeBoard]) {
+      const formData = tools[activeBoard][selectedTool?.id];
+      paramsObjectRef.current = formData;
+
+      updateFormData(form, formData, nodeTypeId, setChartParams, changeOperatorWidthType);
+    }
+  };
+
   useEffect(() => {
     paramsObjectRef.current = {};
-    form.resetFields();
+    resetFormFields(form);
     setChartParams([]);
+
     if (selectedTool?.action_type === UPDATE) {
-      if (tools[activeBoard]) {
-        const formData = tools[activeBoard][selectedTool?.id];
-        paramsObjectRef.current = formData;
-        const isSimilarNodeTypeId = formData?.source_type_id === nodeTypeId;
-        // check name and set form fields value
-        switch (formData?.name) {
-          case CHART: {
-            form.setFieldsValue({
-              title: formData.title,
-              yAxis: isSimilarNodeTypeId ? formData?.params[1]?.property_type_id : null,
-              xAxis: isSimilarNodeTypeId ? formData?.params[0]?.property_type_id : null,
-              legend: formData.legend,
-              operator: formData.operator,
-              color: formData.color,
-            });
-            break;
-          }
-          case TABLE: {
-            form.setFieldsValue({
-              title: formData.title,
-              columns: isSimilarNodeTypeId ? formData.params.map((item: AnyObject) => item.property_type_id) : null,
-            });
-            break;
-          }
-          case TEXT: {
-            form.setFieldsValue({
-              title: formData.title,
-              editor: formData.params[0].additional,
-            });
-            break;
-          }
-          case CARD: {
-            form.setFieldsValue({
-              title: formData.title,
-              yAxis: isSimilarNodeTypeId ? formData?.params[0]?.property_type_id : null,
-              operator: formData.operator,
-              color: formData.color,
-            });
-          }
-        }
-
-        if (formData && isSimilarNodeTypeId) {
-          setChartParams(() =>
-            formData?.params.map((item: AnyObject) => ({
-              id: item.property_type_id,
-              name: item.project_type_name,
-              type: item.property_type,
-              project_type_id: item.project_type_id,
-              project_type_name: item.project_type_name,
-              target_edge_type_id: item.target_edge_type_id,
-            }))
-          );
-
-          const index = formData?.params.length % 2 === 0 ? 1 : 0;
-          changeOperatorWidthType(formData.params[index].property_type, formData.operator);
-        }
-      }
+      handleUpdate(selectedTool, tools, activeBoard, form, nodeTypeId, setChartParams, changeOperatorWidthType);
     }
-  }, [selectedTool, tools, activeBoard, form, nodeTypeId, operators, changeOperatorWidthType]);
+  }, [selectedTool, tools, activeBoard, form, nodeTypeId, setChartParams, changeOperatorWidthType]);
 
   useEffect(() => {
     setIsOptions([...OPERATOR_SELECT_OPTIONS, ...operators]);
@@ -315,7 +351,7 @@ export const ToolParams: React.FC = () => {
           });
           setChartParams([]);
         },
-      }
+      },
     );
 
     form.resetFields();
@@ -334,7 +370,7 @@ export const ToolParams: React.FC = () => {
       <Text style={{ fontSize: 16 }}>
         Parameters ({selectedTool?.name} / {selectedTool?.type})
       </Text>
-      <Form layout="vertical" form={form} onFinish={onFinish}>
+      <Form layout='vertical' form={form} onFinish={onFinish}>
         {ParamsTools.map((tool) => {
           if (tool.type === selectedTool?.name) {
             return tool.items.map((item) => {
@@ -347,12 +383,12 @@ export const ToolParams: React.FC = () => {
                       rules={[{ required: item.required, message: item.message }]}
                     >
                       {item.type === INPUT ? (
-                        <Input className="analytic-form-input" placeholder={item.placeholder} />
+                        <Input className='analytic-form-input' placeholder={item.placeholder} />
                       ) : item.type === COLOR ? (
                         <ColorPicker defaultValue={item.color} />
                       ) : item.type === SELECT ? (
                         <Select
-                          className="analytic-form-select"
+                          className='analytic-form-select'
                           placeholder={item.placeholder}
                           defaultValue={item.options?.at(0)?.value}
                           value={undefined}
@@ -361,14 +397,14 @@ export const ToolParams: React.FC = () => {
                         />
                       ) : item.type === TREESELECT ? (
                         <TreeSelect
-                          className="analytic-form-tree-select"
+                          className='analytic-form-tree-select'
                           placeholder={item.placeholder}
                           showSearch={false}
                           treeLine
                           treeCheckable={item.mode === 'multiple'}
                           multiple={item.mode === 'multiple'}
                           treeData={[treeSelectData]}
-                          treeNodeLabelProp="title"
+                          treeNodeLabelProp='title'
                           onSelect={(value, node) => handleSelect(value, node, item.name)}
                           onChange={(value) => handleChange(value)}
                         />
@@ -383,10 +419,10 @@ export const ToolParams: React.FC = () => {
                               [{ align: [] }],
                             ],
                           }}
-                          theme="snow"
+                          theme='snow'
                           placeholder={item.placeholder}
                           style={{ background: PRIMARY.WHITE, minHeight: 300, fontSize: 14 }}
-                          className="analytic-editor"
+                          className='analytic-editor'
                         />
                       ) : null}
                     </Form.Item>
@@ -407,7 +443,7 @@ export const ToolParams: React.FC = () => {
           }
           return null;
         })}
-        <Button htmlType="submit" type="primary">
+        <Button htmlType='submit' type='primary'>
           Apply
           <Spin indicator={<LoadingOutlined style={{ color: COLORS.PRIMARY.WHITE }} />} spinning={isCreateLoading} />
         </Button>
